@@ -10,7 +10,8 @@ import (
   包路径生成器
 */
 var DirList []string = []string{
-	"controller",
+	"service/client",
+	"service/server",
 	"idl",
 	"main",
 	"scripts",
