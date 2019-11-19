@@ -5,6 +5,7 @@ package generate;
 service Test{
    rpc Sum(SumRequest) returns (SumReply){}
    rpc Concat(ConcatRequest) returns (ConcatReply){}
+   rpc Sub(SumRequest) returns (SumRequest){}
 }
 
 message SumRequest{

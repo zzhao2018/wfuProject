@@ -25,7 +25,7 @@ func(p *GenProto)Name()string{
 
 
 //调用系统调用，生成proto代码
-func(p *GenProto) Run(opt *GenOption)error{
+func(p *GenProto) Run(opt *GenOption,metaData *protoMetaData)error{
 	//初始化路径
 	outputPath:=path.Join(opt.OutputPath,"generate")
 	outputArgs:=fmt.Sprintf("--go_out=plugins=grpc:%s",outputPath)

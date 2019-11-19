@@ -36,7 +36,7 @@ func(p *PackGenerator)Name()string{
 }
 
 
-func(p *PackGenerator) Run(opt *GenOption)error{
+func(p *PackGenerator) Run(opt *GenOption,metaData *protoMetaData)error{
 	//生成pack
 	for _,ele:=range DirList {
 		packStr:=path.Join(opt.OutputPath,ele)
