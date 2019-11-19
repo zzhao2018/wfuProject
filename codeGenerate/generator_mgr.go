@@ -5,6 +5,8 @@ import (
 	"github.com/emicklei/proto"
 	"log"
 	"os"
+	"strings"
+	"text/template"
 )
 
 /*
@@ -31,6 +33,7 @@ type protoMetaData struct {
 	Rpc []*proto.RPC
 	Service *proto.Service
 	Messages []*proto.Message
+	OutputPath string
 }
 
 /*****************抽取proto元数据****************/
@@ -87,6 +90,9 @@ func(g *GenMgr)Run(opt *GenOption)error{
 		log.Printf("generator_mgr Run error,err:%+v\n",err)
 		return err
 	}
+	//处理路径
+	optOutputPath:=strings.Trim(opt.OutputPath,"/.")
+	g.protoData.OutputPath=optOutputPath
 	//产生dir
 	dirGen,ok:=g.genMap[DirGenName]
 	if ok==false {
@@ -109,6 +115,22 @@ func(g *GenMgr)Run(opt *GenOption)error{
 			log.Printf("Run generator %s run error,err:%+v\n",name,err)
 			return err
 		}
+	}
+	return nil
+}
+
+/**************公用方法类*************/
+func parseTemple(fileF *os.File,templateData string,data interface{})error{
+	t:=template.New("main")
+	temp,err:=t.Parse(templateData)
+	if err!=nil {
+		log.Printf("parseTemple parse error,err:%+v\n",err)
+		return err
+	}
+	err=temp.Execute(fileF,data)
+	if err!=nil {
+		log.Printf("parseTemple execute data error,err:%+v\n",err)
+		return err
 	}
 	return nil
 }
