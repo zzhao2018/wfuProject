@@ -13,7 +13,6 @@ var DirList []string = []string{
 	"service/client",
 	"service/server",
 	"idl",
-	"main",
 	"scripts",
 	"conf",
 	"router",
