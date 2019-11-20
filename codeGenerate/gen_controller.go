@@ -8,7 +8,7 @@ import (
 )
 
 const(
-	generatorPath=`service/server`
+	generatorPath=`controller`
 )
 
 /*

@@ -18,6 +18,7 @@ var DirList []string = []string{
 	"router",
 	"model",
 	"generate",
+	"controller",
 }
 
 type PackGenerator struct {

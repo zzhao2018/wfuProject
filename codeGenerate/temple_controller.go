@@ -1,7 +1,7 @@
 package main
 
 var templeData=`
-package main
+package controller
 
 import (
 	"wfuProject/codeGenerate/{{.OutputPath}}/generate"
@@ -12,8 +12,8 @@ type {{.Rpc.Name}}Controller struct {
 }
 
 //检查服务参数
-func(s *{{.Rpc.Name}}Controller)CheckParams(ctx context.Context, req *generate.{{.Rpc.RequestType}})(*generate.{{.Rpc.ReturnsType}}, error){
-   return nil,nil
+func(s *{{.Rpc.Name}}Controller)CheckParams(ctx context.Context, req *generate.{{.Rpc.RequestType}})(error){
+   return nil
 }
 
 //方法实现
