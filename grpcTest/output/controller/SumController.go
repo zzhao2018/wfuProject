@@ -2,8 +2,10 @@
 package controller
 
 import (
-	"wfuProject/codeGenerate/output/generate"
 	"context"
+	"math/rand"
+	"time"
+	"wfuProject/output/generate"
 )
 
 type SumController struct {
@@ -16,7 +18,9 @@ func(s *SumController)CheckParams(ctx context.Context, req *generate.SumRequest)
 
 //方法实现
 func(s *SumController)Run(ctx context.Context, req *generate.SumRequest)(*generate.SumReply, error){
-   return &generate.SumReply{
-	   V:                    (req.B+req.A),
-   },nil
+	sleepTimeLen:=int64(time.Millisecond)*rand.Int63n(50)
+	time.Sleep(time.Duration(sleepTimeLen))
+	return &generate.SumReply{
+	    V:                    (req.B+req.A),
+	},nil
 }

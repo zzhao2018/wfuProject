@@ -2,28 +2,40 @@
 package main
 
 import (
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"wfuProject/codeGenerate/output/generate"
-	"wfuProject/codeGenerate/output/midware"
-	"wfuProject/codeGenerate/output/router"
+	"net/http"
+	"wfuProject/output/generate"
+    "wfuProject/output/router"
 )
 
 const(
-	port=":12306"
+	port=":6379"
+	prome_port=":8080"
 )
+
+//监控
+func promeGotine(){
+	http.Handle("/metrics",promhttp.Handler())
+	err:=http.ListenAndServe(prome_port,nil)
+	if err!=nil {
+		panic(err)
+	}
+}
 
 
 func main() {
-	//监听端口
+    //监听
+	go promeGotine()
+	//处理rpc
 	lis,err:=net.Listen("tcp",port)
 	if err!=nil {
 		log.Println("listen tcp error,err:",err)
 		return
 	}
 	defer lis.Close()
-	midware.MidWareT()
 	grpcServer:=grpc.NewServer()
 	//初始化grpc
 	generate.RegisterTestServer(grpcServer,&router.RouterServer{})

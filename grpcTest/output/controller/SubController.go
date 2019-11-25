@@ -2,8 +2,8 @@
 package controller
 
 import (
-	"wfuProject/codeGenerate/output/generate"
 	"context"
+	"wfuProject/output/generate"
 )
 
 type SubController struct {

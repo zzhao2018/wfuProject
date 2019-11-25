@@ -36,10 +36,13 @@ func AddUserMidWare(midware ...MidWare){
 
 //连接中间件
 func BuildUserMidWareChain(handler MidWareFunc)MidWareFunc{
-	if len(userMidWareLink)==0 {
-		return handler
+    var midwareLink []MidWare
+    //添加监控中间件
+    midwareLink=append(midwareLink, PromeScanMidWare)
+	if len(userMidWareLink)!=0 {
+		midwareLink=append(midwareLink,userMidWareLink...)
 	}
-	headFunc:=Chain(userMidWareLink[0],userMidWareLink[1:]...)
+	headFunc:=Chain(midwareLink[0],midwareLink[1:]...)
 	outerFunc:=headFunc(handler)
 	return outerFunc
 }
