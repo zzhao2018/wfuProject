@@ -4,19 +4,31 @@ var templeMain=`
 package main
 
 import (
+    "fmt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"log"
 	"net"
 	"net/http"
-	"wfuProject/codeGenerate/{{.OutputPath}}/generate"
+    "wfuProject/codeGenerate/{{.OutputPath}}/generate"
+	"wfuProject/codeGenerate/{{.OutputPath}}/projectUtil"
     "wfuProject/codeGenerate/{{.OutputPath}}/router"
 )
 
-const(
+var(
 	port=""
-	prome_port=":8080"
+	prome_port=""
 )
+
+func init(){
+	err:=projectUtil.ParseConfInit(projectUtil.G_TestConfName)
+    if err!=nil{
+       log.Printf("main ParseConfInit error,err:%+v\n",err)
+       return
+    }
+	port=fmt.Sprintf(":%d",projectUtil.GetParseConfPort())
+	prome_port=fmt.Sprintf(":%d",projectUtil.GetParseConfPrometheus().Port)
+}
 
 //监控
 func promeGotine(){
@@ -30,7 +42,9 @@ func promeGotine(){
 
 func main() {
     //监听
-	go promeGotine()
+	if projectUtil.GetParseConfPrometheus().Switch_on==true {
+		go promeGotine()
+	}
 	//处理rpc
 	lis,err:=net.Listen("tcp",port)
 	if err!=nil {

@@ -12,12 +12,13 @@ import (
 var DirList []string = []string{
 	"service/client",
 	"service/server",
-	"idl",
 	"scripts",
-	"conf",
+	"conf/product",
+	"conf/test",
 	"router",
 	"model",
 	"generate",
+	"projectUtil",
 	"controller",
 	"midware",
 }
