@@ -9,7 +9,8 @@ import(
   "context"
   "wfuProject/codeGenerate/{{.OutputPath}}/generate"
   "wfuProject/codeGenerate/{{.OutputPath}}/controller"
-  "wfuProject/codeGenerate/{{.OutputPath}}/midware"
+  "wfuProject/midware"
+  "wfuProject/server"
 )
 
 type RouterServer struct{
@@ -18,7 +19,7 @@ type RouterServer struct{
 {{range .Rpc}}
 func(r *RouterServer){{.Name}}(ctx context.Context, req *generate.{{.RequestType}})(*generate.{{.ReturnsType}},error){
     ctx=midware.InitServerScanMeta(ctx,"{{$.Service.Name}}","{{.Name}}")
-    outFunc:=midware.BuildUserMidWareChain({{.Name}}MidWare)
+    outFunc:=server.BuildUserMidWareChain({{.Name}}MidWare)
     response,err:=outFunc(ctx,req)
     if err!=nil{
         log.Printf("{{.Name}} outfunc error,err=%+v\n",err)

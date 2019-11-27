@@ -25,14 +25,14 @@ func main() {
 	}
 	log.Printf("concat:%+v\n",reply)
 	for  {
-	    _,err:=client.Sum(context.Background(),&generate.SumRequest{
+	    replyS,err:=client.Sum(context.Background(),&generate.SumRequest{
 			A:                    rand.Int63n(1000),
 			B:                    rand.Int63n(12022),
 		})
 		if err!=nil {
 			log.Printf("sum error,err:%+v\n",err)
 		}
-	//	log.Printf("sum:%+v\n",replyS)
+		log.Printf("sum:%+v\n",replyS)
 		time.Sleep(time.Millisecond*10)
 	}
 

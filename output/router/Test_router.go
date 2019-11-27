@@ -5,9 +5,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"wfuProject/midware"
 	"wfuProject/output/controller"
 	"wfuProject/output/generate"
-	"wfuProject/output/midware"
+	"wfuProject/server"
 )
 
 type RouterServer struct{
@@ -15,8 +16,8 @@ type RouterServer struct{
 
 
 func(r *RouterServer)Sum(ctx context.Context, req *generate.SumRequest)(*generate.SumReply,error){
-    ctx= midware.InitServerScanMeta(ctx,"Test","Sum")
-    outFunc:= midware.BuildUserMidWareChain(SumMidWare)
+    ctx=midware.InitServerScanMeta(ctx,"Test","Sum")
+    outFunc:=server.BuildUserMidWareChain(SumMidWare)
     response,err:=outFunc(ctx,req)
     if err!=nil{
         log.Printf("Sum outfunc error,err=%+v\n",err)
@@ -55,8 +56,8 @@ func SumMidWare(ctx context.Context, request interface{})(interface{},error){
 }
 
 func(r *RouterServer)Concat(ctx context.Context, req *generate.ConcatRequest)(*generate.ConcatReply,error){
-    ctx= midware.InitServerScanMeta(ctx,"Test","Concat")
-    outFunc:= midware.BuildUserMidWareChain(ConcatMidWare)
+    ctx=midware.InitServerScanMeta(ctx,"Test","Concat")
+    outFunc:=server.BuildUserMidWareChain(ConcatMidWare)
     response,err:=outFunc(ctx,req)
     if err!=nil{
         log.Printf("Concat outfunc error,err=%+v\n",err)
@@ -95,8 +96,8 @@ func ConcatMidWare(ctx context.Context, request interface{})(interface{},error){
 }
 
 func(r *RouterServer)Sub(ctx context.Context, req *generate.SumRequest)(*generate.SumReply,error){
-    ctx= midware.InitServerScanMeta(ctx,"Test","Sub")
-    outFunc:= midware.BuildUserMidWareChain(SubMidWare)
+    ctx=midware.InitServerScanMeta(ctx,"Test","Sub")
+    outFunc:=server.BuildUserMidWareChain(SubMidWare)
     response,err:=outFunc(ctx,req)
     if err!=nil{
         log.Printf("Sub outfunc error,err=%+v\n",err)
