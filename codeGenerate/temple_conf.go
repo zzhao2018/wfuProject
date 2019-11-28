@@ -10,4 +10,8 @@ limit:
   size: 1000
   type: lpLimit
   timediff: -1
+logs:
+  chansize: 100
+  loglevel: debug
+  servername: test
 `

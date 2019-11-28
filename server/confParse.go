@@ -2,7 +2,7 @@
 package server
 
 import (
-    "fmt"
+	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -12,6 +12,13 @@ type Conf struct {
 	Port  int  `yaml:"port"`
 	Prometheus PromeConf `yaml:"prometheus"`
 	Limit LimitConf `yaml:"limit"`
+	Logs LogsConf ``
+}
+
+type LogsConf struct {
+	ChanSize int `yaml:"chansize"`
+	LogLevel string `yaml:"loglevel"`
+	ServerName string `yaml:"servername"`
 }
 
 type LimitConf struct {
