@@ -115,7 +115,7 @@ func (e *EtcdRegister) doRegister(serverData *ServerRegisterMeta) error {
 			Node: []*register.ServerNode{serverNode},
 		}
 		key := e.getKey(temp)
-		//log.Printf("real path:%s\n",key)
+		log.Printf("register key:%s\n",key)
 		value, err := json.Marshal(temp)
 		if err != nil {
 			log.Printf("doRegister marshal error,err:%+v\n", err)

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"github.com/MXi4oyu/golang.org/x/time/rate"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -8,9 +9,14 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
+	"sync/atomic"
 	"time"
 	"wfuProject/logs"
 	"wfuProject/midware"
+	_"wfuProject/register/etcdRegister"
+	"wfuProject/register"
+
 )
 
 type ServerConf struct {
@@ -66,11 +72,98 @@ func InitOpt()error{
 	//初始化grpc
 	serverConf.grpcServer=grpc.NewServer()
 	//初始化限流器
-	serverConf.limit=initLimit()
+	if conf.Limit.Switch_on {
+		serverConf.limit=initLimit()
+	}
 	//初始化日志库
 	initLog()
+	//初始化服务注册
+	if conf.Register.Switch_on {
+		err=initRegister()
+		if err!=nil {
+			log.Printf("server InitOpt initRegister error,err:%+v\n",err)
+			return err
+		}
+	}
 	return nil
 }
+
+//初始化服务注册
+func initRegister()(error){
+	//初始化
+	regis,err:=register.InitServer(context.TODO(),"etcd",
+		register.RegisterInitTimeOut(conf.Register.TimeOut),
+		register.RegisterInitRegisterPath(conf.Register.RegisterPath),
+		register.RegisterInitHeartBeat(conf.Register.HeartBeat),
+		register.RegisterInitAddr(conf.Register.Addr))
+	if err!=nil {
+		log.Printf("initRegister InitServer error,err:%+v\n",err)
+		return err
+	}
+	//服务初始化
+	serverMeta:=&register.Server{
+		Name: conf.ServerName,
+		Node: make([]*register.ServerNode,0),
+	}
+	//获取当前ip
+	ips,err:=getLocalIp()
+	if err!=nil {
+		log.Printf("initRegister getLocalIp error,err:%+v\n",err)
+		return err
+	}
+	serverNode:=&register.ServerNode{
+		Ip:     ips,
+		Port:   strconv.Itoa(conf.Port),
+		Weight: 0,
+	}
+	serverMeta.Node=append(serverMeta.Node,serverNode)
+	//注册服务
+	err=regis.Register(context.TODO(),serverMeta)
+	if err!=nil {
+		log.Printf("initRegister Register error,err:%+v\n",err)
+		return err
+	}
+	return nil
+}
+
+//获取当前ip
+var ipStore atomic.Value
+
+func getLocalIp()(string,error){
+	//查询缓存
+	ipstr,ok:=ipStore.Load().(string)
+	if ok==true {
+		return ipstr,nil
+	}
+	//无缓存，则读取
+	addrs,err:=net.Interfaces()
+	if err!=nil {
+		log.Printf("getLocalIp InterfaceAddrs error,err:%+v\n",err)
+		return "",err
+	}
+	//获得ip
+	for _,addr:=range addrs {
+		if (addr.Flags&net.FlagUp)!=0 {
+			addrEleArr,err:=addr.Addrs()
+			if err!=nil {
+				log.Printf("getLocalIp Addrs error,err:%+v\n",err)
+				return "",err
+			}
+			for _,addrEle:=range addrEleArr  {
+				if ipnet, ok := addrEle.(*net.IPNet);ok==true&&!ipnet.IP.IsLoopback() {
+					if ipnet.IP.To4() != nil{
+						ips:=ipnet.IP.String()
+						ipStore.Store(ips)
+						return ips,nil
+					}
+				}
+			}
+		}
+	}
+	err=fmt.Errorf("getLocalIp ip not found exception")
+	return "",err
+}
+
 
 //初始化限流器
 func initLimit()midware.LimitMid{
@@ -91,7 +184,7 @@ func initLimit()midware.LimitMid{
 //初始化日志
 func initLog(){
 	//初始化日志
-	logs.InitLog(conf.Logs.ChanSize,logs.GetLogLevelFromStr(conf.Logs.LogLevel),conf.Logs.ServerName)
+	logs.InitLog(conf.Logs.ChanSize,logs.GetLogLevelFromStr(conf.Logs.LogLevel),conf.ServerName)
 	//初始化控制台日志输出
 	outputL:=logs.NewLogConsole()
 	logs.LogAddOutPut(outputL)

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"wfuProject/util"
 )
 
 const(
@@ -41,9 +42,12 @@ func(g *GenController)buildServer(opt *GenOption,metaData *protoMetaData)error{
 	midMap:=make(map[string]interface{})
 	midMap["OutputPath"]=metaData.OutputPath
 	for _,rpcEle:=range metaData.Rpc {
-		midMap["Rpc"]=rpcEle
 		//打开需生成的代码文件
 		fileName:=path.Join(opt.OutputPath,generatorPath,fmt.Sprintf("%sController.go",rpcEle.Name))
+		if util.CheckFileExist(fileName)==true {
+			continue
+		}
+		midMap["Rpc"]=rpcEle
 		file,err:=os.OpenFile(fileName,os.O_WRONLY|os.O_CREATE|os.O_TRUNC,0755)
 		if err!=nil {
 			log.Printf("controller Run open file error,err:%+v\n",err)

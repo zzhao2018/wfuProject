@@ -1,6 +1,7 @@
 package main
 
 var confTemp=`port: 12306
+servername: "test"
 prometheus:
   switch_on: true
   port: 8080
@@ -13,5 +14,11 @@ limit:
 logs:
   chansize: 100
   loglevel: debug
-  servername: test
+register:
+  switch_on: true
+  addr: 
+    - localhost:2379
+  timeOut: 1s
+  registerPath: "/test"
+  heartBeat: 5
 `
