@@ -15,6 +15,14 @@ type Conf struct {
 	Limit      LimitConf    `yaml:"limit"`
 	Logs       LogsConf     `yaml:"logs"`
 	Register   RegisterConf `yaml:"register"`
+	Trace      TraceConf    `yaml:"trace"`
+}
+
+type TraceConf struct {
+	Switch_on   bool    `yaml:"switch_on"`
+	Report_addr string  `yaml:"report_addr"`
+	Sample_type string  `yaml:"sample_type"`
+	Sample_rate float64 `yaml:"sample_rate"`
 }
 
 type RegisterConf struct {

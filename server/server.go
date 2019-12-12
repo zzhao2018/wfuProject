@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/MXi4oyu/golang.org/x/time/rate"
+	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go/config"
+	"github.com/uber/jaeger-client-go/transport/zipkin"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -42,9 +46,15 @@ func AddUserMidWare(midware ...midware.MidWare){
 //连接中间件
 func BuildUserMidWareChain(handler midware.MidWareFunc)midware.MidWareFunc{
 	var midwareLink []midware.MidWare
+	//初始化traceid
+	midwareLink=append(midwareLink,midware.NewPrepareMidWare())
 	//添加监控中间件
 	if conf.Prometheus.Switch_on {
 		midwareLink=append(midwareLink,midware.PromeScanMidWare)
+	}
+	//添加分布式追踪
+	if conf.Trace.Switch_on {
+		midwareLink=append(midwareLink,midware.NewTraceMidWare)
 	}
 	//添加限流中间件
 	if conf.Limit.Switch_on {
@@ -85,6 +95,49 @@ func InitOpt()error{
 			return err
 		}
 	}
+	//初始化分布式追踪
+	if conf.Trace.Switch_on {
+		err=initTrace(conf.ServerName)
+		if err!=nil {
+			log.Printf("server InitOpt initTrace error,err:%+v\n",err)
+			return err
+		}
+	}
+	return nil
+}
+
+
+//初始化分布式追踪
+func initTrace(serverName string)error{
+	//初始化
+	transport,err:=zipkin.NewHTTPTransport(
+		conf.Trace.Report_addr,
+		zipkin.HTTPBatchSize(1),
+		zipkin.HTTPLogger(jaeger.StdLogger),
+		)
+	if err!=nil {
+		log.Printf("server initTrace NewHTTPTransport error,err:%+v\n",err)
+		return err
+	}
+	//初始化conf
+	cfg:=&config.Configuration{
+		Sampler:             &config.SamplerConfig{
+			Type:                     conf.Trace.Sample_type,
+			Param:                    conf.Trace.Sample_rate,
+		},
+		Reporter:            &config.ReporterConfig{
+			LogSpans:            true,
+		},
+	}
+	//初始化remove
+	r:=jaeger.NewRemoteReporter(transport)
+	trace,_,err:=cfg.New(serverName,config.Reporter(r),config.Logger(jaeger.StdLogger))
+	if err!=nil {
+		log.Printf("server initTrace NewCfg error,err:%+v\n",err)
+		return err
+	}
+	//设置全局变量
+	opentracing.SetGlobalTracer(trace)
 	return nil
 }
 

@@ -21,4 +21,9 @@ register:
   timeOut: 1s
   registerPath: "/test"
   heartBeat: 5
+trace:
+  switch_on: true
+  report_addr: ""
+  sample_type: const
+  sample_rate: 1
 `

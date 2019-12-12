@@ -1,14 +1,14 @@
 
 package router
 
-import (
-	"context"
-	"fmt"
-	"wfuProject/logs"
-	"wfuProject/midware"
-	"wfuProject/output/controller"
-	"wfuProject/output/generate"
-	"wfuProject/server"
+import(
+  "fmt"
+  "context"
+  "wfuProject/output/generate"
+  "wfuProject/output/controller"
+  "wfuProject/midware"
+  "wfuProject/server"
+  "wfuProject/logs"
 )
 
 type RouterServer struct{
@@ -17,8 +17,6 @@ type RouterServer struct{
 
 func(r *RouterServer)Sum(ctx context.Context, req *generate.SumRequest)(*generate.SumReply,error){
     ctx=midware.InitServerScanMeta(ctx,"Test","Sum")
-    //初始化traceid
-    ctx=logs.SetTraceId(ctx)
     outFunc:=server.BuildUserMidWareChain(SumMidWare)
     response,err:=outFunc(ctx,req)
     if err!=nil{
@@ -59,8 +57,6 @@ func SumMidWare(ctx context.Context, request interface{})(interface{},error){
 
 func(r *RouterServer)Concat(ctx context.Context, req *generate.ConcatRequest)(*generate.ConcatReply,error){
     ctx=midware.InitServerScanMeta(ctx,"Test","Concat")
-    //初始化traceid
-    ctx=logs.SetTraceId(ctx)
     outFunc:=server.BuildUserMidWareChain(ConcatMidWare)
     response,err:=outFunc(ctx,req)
     if err!=nil{
@@ -101,8 +97,6 @@ func ConcatMidWare(ctx context.Context, request interface{})(interface{},error){
 
 func(r *RouterServer)Sub(ctx context.Context, req *generate.SumRequest)(*generate.SumReply,error){
     ctx=midware.InitServerScanMeta(ctx,"Test","Sub")
-    //初始化traceid
-    ctx=logs.SetTraceId(ctx)
     outFunc:=server.BuildUserMidWareChain(SubMidWare)
     response,err:=outFunc(ctx,req)
     if err!=nil{

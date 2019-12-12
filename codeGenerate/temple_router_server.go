@@ -19,8 +19,6 @@ type RouterServer struct{
 {{range .Rpc}}
 func(r *RouterServer){{.Name}}(ctx context.Context, req *generate.{{.RequestType}})(*generate.{{.ReturnsType}},error){
     ctx=midware.InitServerScanMeta(ctx,"{{$.Service.Name}}","{{.Name}}")
-    //初始化traceid
-    ctx=logs.SetTraceId(ctx)
     outFunc:=server.BuildUserMidWareChain({{.Name}}MidWare)
     response,err:=outFunc(ctx,req)
     if err!=nil{
