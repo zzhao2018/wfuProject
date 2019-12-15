@@ -23,7 +23,7 @@ register:
   heartBeat: 5
 trace:
   switch_on: true
-  report_addr: ""
+  report_addr: "http://60.205.218.189:9411/api/v1/spans"
   sample_type: const
   sample_rate: 1
 `
