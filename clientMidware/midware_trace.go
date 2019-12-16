@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/opentracing/opentracing-go"
+	log3 "github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/transport/zipkin"
@@ -33,6 +34,10 @@ func NewTraceMidware(nextFunc ClientMidwareFunc)ClientMidwareFunc{
 			trace,closer:=traceInit(serverName)
 			defer closer.Close()
 			span:=trace.StartSpan(fmt.Sprintf("span-%s",serverName))
+			span.LogFields(
+				log3.String("event","client_trace"),
+				log3.String("value",traceid),
+				)
 			defer span.Finish()
 			req:=injectSpanToCtx(span)
 			ctx=metadata.AppendToOutgoingContext(ctx,"wfuproject_trace_label",traceid,"Uber-Trace-Id",req.Header["Uber-Trace-Id"][0])
