@@ -12,23 +12,24 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"wfuProject/clientUtil"
 )
 type ClientTraceIdKey struct {}
 type ClientTraceServerName struct {}
 
-func NewTraceMidware(nextFunc ClientMidwareFunc)ClientMidwareFunc{
+func NewClientTraceMidware(nextFunc ClientMidwareFunc)ClientMidwareFunc{
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		var(
+			serverMetaData *clientUtil.ClientMetaData
+		)
 		//获得追踪id
-		traceid,ok:=ctx.Value(ClientTraceIdKey{}).(string)
-		if ok==false {
-			traceid=""
+		serverMetaData,err=clientUtil.GetMetaDataFromContext(ctx)
+		if err!=nil {
+			log.Printf("error,err:%+v\n",err)
+			return nil,err
 		}
-		//获得服务名称
-		serverName,ok:=ctx.Value(ClientTraceServerName{}).(string)
-		if ok==false {
-			serverName=""
-		}
-		fmt.Printf("log id:%+v\n",traceid)
+		traceid:=serverMetaData.Traceid
+		serverName:=serverMetaData.ServerName
 		//增加分布式追踪
 		if traceid!="" {
 			trace,closer:=traceInit(serverName)

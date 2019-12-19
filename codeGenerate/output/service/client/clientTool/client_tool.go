@@ -1,12 +1,13 @@
 
-package clientService
+package clientTool
 
 import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
-	"wfuProject/clientMidware"
+	"wfuProject/clientService"
+    "wfuProject/clientUtil"
 	"wfuProject/codeGenerate/output/generate"
 )
 
@@ -14,40 +15,24 @@ const(
 	addr ="localhost:12306"
 )
 
-type OptionFunc func(c *ClientDeal)
-
 type ClientDeal struct {
-	serverName string
-	traceid string
+	clientService *clientService.ClientService
 }
+
 
 /**************初始化*****************/
-func NewClientDeal(serverName string,opts ...OptionFunc)*ClientDeal{
-	client:=&ClientDeal{
-		serverName:serverName,
-	}
-	for _,eleFunc:=range opts {
-		eleFunc(client)
-	}
-	return client
-}
-
-func OptClientTraceId(traceids string)OptionFunc{
-	return func(c *ClientDeal) {
-		c.traceid=traceids
-	}
+func NewClientDeal(serverName string,opts ...clientService.OptionFunc)*ClientDeal{
+	cs:=clientService.NewClientService(serverName,opts...)
+	return &ClientDeal{clientService:cs}
 }
 
 /*******************方法封装******************/
 
 func(c *ClientDeal)Sum(ctx context.Context, in *generate.SumRequest, opts ...grpc.CallOption) (*generate.SumReply, error) {
-	//设置分布式追踪traceid
-	ctx=c.contextWithTraceMidWareValue(ctx)
-	//启动中间件
-	outFunc:=clientMidware.BuildClientMidWareLink(SumClientHandler)
-	response,err:=outFunc(ctx,in)
+	//调用call
+    response,err:=c.clientService.Call(ctx,SumClientHandler,in,"Sum")
 	if err!=nil {
-		log.Printf("Sum getResponse error,err:%+v\n",err)
+		log.Printf("Sum Call error,err:%+v\n",err)
 		return nil,err
 	}
 	responseData,ok:=response.(*generate.SumReply)
@@ -56,17 +41,17 @@ func(c *ClientDeal)Sum(ctx context.Context, in *generate.SumRequest, opts ...grp
 		log.Printf("Sum change response error\n")
 		return nil,err
 	}
-	return responseData,nil
+	return responseData,nil	
 }
 
 func SumClientHandler(ctx context.Context,request interface{})(interface{},error){
-	//连接grpc
-	conn,err:=grpc.Dial(addr,grpc.WithInsecure())
+	//从短连接中获取conn
+	serverMetaData,err:=clientUtil.GetMetaDataFromContext(ctx)
 	if err!=nil {
-		log.Printf("SumClientHandler dial grpc error,err:%+v\n",err)
+		log.Printf("client_tool SumClientHandler GetMetaDataFromContext error,err:%+v\n",err)
 		return nil,err
 	}
-	defer conn.Close()
+	conn:=serverMetaData.Conn
 	client:=generate.NewTestClient(conn)
 	//获得request
 	requestClient,ok:=request.(*generate.SumRequest)
@@ -84,13 +69,10 @@ func SumClientHandler(ctx context.Context,request interface{})(interface{},error
 }
 
 func(c *ClientDeal)Concat(ctx context.Context, in *generate.ConcatRequest, opts ...grpc.CallOption) (*generate.ConcatReply, error) {
-	//设置分布式追踪traceid
-	ctx=c.contextWithTraceMidWareValue(ctx)
-	//启动中间件
-	outFunc:=clientMidware.BuildClientMidWareLink(ConcatClientHandler)
-	response,err:=outFunc(ctx,in)
+	//调用call
+    response,err:=c.clientService.Call(ctx,ConcatClientHandler,in,"Concat")
 	if err!=nil {
-		log.Printf("Concat getResponse error,err:%+v\n",err)
+		log.Printf("Concat Call error,err:%+v\n",err)
 		return nil,err
 	}
 	responseData,ok:=response.(*generate.ConcatReply)
@@ -99,17 +81,17 @@ func(c *ClientDeal)Concat(ctx context.Context, in *generate.ConcatRequest, opts 
 		log.Printf("Concat change response error\n")
 		return nil,err
 	}
-	return responseData,nil
+	return responseData,nil	
 }
 
 func ConcatClientHandler(ctx context.Context,request interface{})(interface{},error){
-	//连接grpc
-	conn,err:=grpc.Dial(addr,grpc.WithInsecure())
+	//从短连接中获取conn
+	serverMetaData,err:=clientUtil.GetMetaDataFromContext(ctx)
 	if err!=nil {
-		log.Printf("ConcatClientHandler dial grpc error,err:%+v\n",err)
+		log.Printf("client_tool SumClientHandler GetMetaDataFromContext error,err:%+v\n",err)
 		return nil,err
 	}
-	defer conn.Close()
+	conn:=serverMetaData.Conn
 	client:=generate.NewTestClient(conn)
 	//获得request
 	requestClient,ok:=request.(*generate.ConcatRequest)
@@ -127,13 +109,10 @@ func ConcatClientHandler(ctx context.Context,request interface{})(interface{},er
 }
 
 func(c *ClientDeal)Sub(ctx context.Context, in *generate.SumRequest, opts ...grpc.CallOption) (*generate.SumReply, error) {
-	//设置分布式追踪traceid
-	ctx=c.contextWithTraceMidWareValue(ctx)
-	//启动中间件
-	outFunc:=clientMidware.BuildClientMidWareLink(SubClientHandler)
-	response,err:=outFunc(ctx,in)
+	//调用call
+    response,err:=c.clientService.Call(ctx,SubClientHandler,in,"Sub")
 	if err!=nil {
-		log.Printf("Sub getResponse error,err:%+v\n",err)
+		log.Printf("Sub Call error,err:%+v\n",err)
 		return nil,err
 	}
 	responseData,ok:=response.(*generate.SumReply)
@@ -142,17 +121,17 @@ func(c *ClientDeal)Sub(ctx context.Context, in *generate.SumRequest, opts ...grp
 		log.Printf("Sub change response error\n")
 		return nil,err
 	}
-	return responseData,nil
+	return responseData,nil	
 }
 
 func SubClientHandler(ctx context.Context,request interface{})(interface{},error){
-	//连接grpc
-	conn,err:=grpc.Dial(addr,grpc.WithInsecure())
+	//从短连接中获取conn
+	serverMetaData,err:=clientUtil.GetMetaDataFromContext(ctx)
 	if err!=nil {
-		log.Printf("SubClientHandler dial grpc error,err:%+v\n",err)
+		log.Printf("client_tool SumClientHandler GetMetaDataFromContext error,err:%+v\n",err)
 		return nil,err
 	}
-	defer conn.Close()
+	conn:=serverMetaData.Conn
 	client:=generate.NewTestClient(conn)
 	//获得request
 	requestClient,ok:=request.(*generate.SumRequest)
@@ -167,12 +146,5 @@ func SubClientHandler(ctx context.Context,request interface{})(interface{},error
 		return nil,err
 	}
 	return response,nil
-}
-
-
-/********context携带traceid*******/
-func(c *ClientDeal) contextWithTraceMidWareValue(ctx context.Context)context.Context{
-	ctx=context.WithValue(ctx,clientMidware.ClientTraceServerName{},c.serverName)
-	return context.WithValue(ctx,clientMidware.ClientTraceIdKey{},c.traceid)
 }
 

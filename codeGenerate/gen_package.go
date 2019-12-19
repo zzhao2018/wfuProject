@@ -19,7 +19,7 @@ var DirList []string = []string{
 	"model",
 	"generate",
 	"controller",
-	"service/client/clientService",
+	"service/client/clientTool",
 }
 
 

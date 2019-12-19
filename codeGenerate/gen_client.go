@@ -12,7 +12,7 @@ type GenClient struct {
 
 const(
 	genclientName="genClient"
-	genClientServiceDir="service/client/clientService"
+	genClientServiceDir="service/client/clientTool"
 	genClientDir="service/client"
 )
 
@@ -38,7 +38,7 @@ func(g *GenClient) Run(opt *GenOption,metaData *protoMetaData)error{
 		}
 	}
 	//构造mainserver
-	pathServiceS:=path.Join(opt.OutputPath,genClientServiceDir,"client_service.go")
+	pathServiceS:=path.Join(opt.OutputPath,genClientServiceDir,"client_tool.go")
 	err:=createFile(pathServiceS,templeClientService,metaData)
 	if err!=nil {
 		log.Printf("gen_client Run create service file error,err:%+v\n",err)

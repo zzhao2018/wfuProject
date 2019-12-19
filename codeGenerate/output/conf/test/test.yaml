@@ -1,8 +1,8 @@
-port: 12306
-servername: "NewTest"
+port: 12309
+servername: "serverTest"
 prometheus:
   switch_on: true
-  port: 8080
+  port: 8095
 limit:
   switch_on: true
   qps: 10
@@ -17,7 +17,7 @@ register:
   addr: 
     - localhost:2379
   timeOut: 1s
-  registerPath: "/test1216"
+  registerPath: "/test"
   heartBeat: 5
 trace:
   switch_on: true

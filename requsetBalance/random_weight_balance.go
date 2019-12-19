@@ -3,6 +3,7 @@ package requsetBalance
 import (
 	"context"
 	"math/rand"
+	"time"
 	"wfuProject/register"
 )
 
@@ -31,6 +32,7 @@ func(r *RandomWeightBalance)Select(ctx context.Context,nodeList []*register.Serv
 		allWeight+=ele.Weight
 	}
 	//产生随机数
+	rand.Seed(time.Now().UnixNano())
 	randWeight:=rand.Intn(allWeight)
 	//判断权值所属结点
 	for _,ele:=range nodeList {

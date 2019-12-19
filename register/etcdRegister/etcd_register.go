@@ -263,7 +263,7 @@ func (e *EtcdRegister) GetServer(ctx context.Context, serverName string) (*regis
 	//查询缓存
 	serverData, ok := e.getServerFromCache(serverName)
 	if ok == true {
-		log.Printf("hit cache,data:%+v\n", serverData)
+		//log.Printf("hit cache,data:%+v\n", serverData)
 		return serverData, nil
 	}
 	//若未命中缓存，查询etcd
@@ -272,7 +272,7 @@ func (e *EtcdRegister) GetServer(ctx context.Context, serverName string) (*regis
 	//再次查询cache
 	serverData, ok = e.getServerFromCache(serverName)
 	if ok == true {
-		log.Printf("hit cache,data:%+v\n", serverData)
+		//log.Printf("hit cache,data:%+v\n", serverData)
 		return serverData, nil
 	}
 	//构造key
