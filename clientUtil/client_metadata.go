@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
-	"log"
+	"wfuProject/logs"
 	"wfuProject/register"
 )
 
@@ -28,7 +28,7 @@ func GetMetaDataFromContext(ctx context.Context)(*ClientMetaData,error){
 	result,ok:=ctx.Value(clientMetaDataKey{}).(*ClientMetaData)
 	if ok==false {
 		err:=fmt.Errorf("GetMetaDataFromContext get value error")
-		log.Printf("GetMetaDataFromContext get value error\n")
+		logs.Error(ctx,"GetMetaDataFromContext get value error\n")
 		return nil,err
 	}
 	return result,nil

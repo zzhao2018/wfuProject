@@ -10,9 +10,9 @@ import (
 	"github.com/uber/jaeger-client-go/transport/zipkin"
 	"google.golang.org/grpc/metadata"
 	"io"
-	"log"
 	"net/http"
 	"wfuProject/clientUtil"
+	"wfuProject/logs"
 )
 type ClientTraceIdKey struct {}
 type ClientTraceServerName struct {}
@@ -25,14 +25,14 @@ func NewClientTraceMidware(nextFunc ClientMidwareFunc)ClientMidwareFunc{
 		//获得追踪id
 		serverMetaData,err=clientUtil.GetMetaDataFromContext(ctx)
 		if err!=nil {
-			log.Printf("error,err:%+v\n",err)
+			logs.Error(ctx,"error,err:%+v\n",err)
 			return nil,err
 		}
 		traceid:=serverMetaData.Traceid
 		serverName:=serverMetaData.ServerName
 		//增加分布式追踪
 		if traceid!="" {
-			trace,closer:=traceInit(serverName)
+			trace,closer:=traceInit(ctx,serverName)
 			defer closer.Close()
 			span:=trace.StartSpan(fmt.Sprintf("span-%s",serverName))
 			span.LogFields(
@@ -40,7 +40,7 @@ func NewClientTraceMidware(nextFunc ClientMidwareFunc)ClientMidwareFunc{
 				log3.String("value",traceid),
 				)
 			defer span.Finish()
-			req:=injectSpanToCtx(span)
+			req:=injectSpanToCtx(ctx,span)
 			ctx=metadata.AppendToOutgoingContext(ctx,"wfuproject_trace_label",traceid,"Uber-Trace-Id",req.Header["Uber-Trace-Id"][0])
 		}
 		//调用处理函数
@@ -51,14 +51,14 @@ func NewClientTraceMidware(nextFunc ClientMidwareFunc)ClientMidwareFunc{
 
 /*******************内部方法***************/
 //初始化分布式追踪
-func traceInit(serverName string)(opentracing.Tracer,io.Closer){
+func traceInit(ctx context.Context,serverName string)(opentracing.Tracer,io.Closer){
 	//初始化
 	transport,err:=zipkin.NewHTTPTransport(
 		"",
 		zipkin.HTTPBatchSize(1),
 		zipkin.HTTPLogger(jaeger.StdLogger),)
 	if err!=nil {
-		log.Printf("traceInit NewHTTPTransport error:%+v\n",err)
+		logs.Error(ctx,"traceInit NewHTTPTransport error:%+v\n",err)
 		return nil,nil
 	}
 	cfg:=&config.Configuration{
@@ -73,18 +73,18 @@ func traceInit(serverName string)(opentracing.Tracer,io.Closer){
 	r:=jaeger.NewRemoteReporter(transport)
 	trace,closer,err:=cfg.New(serverName,config.Reporter(r),config.Logger(jaeger.StdLogger))
 	if err!=nil {
-		log.Printf("traceInit NewRemoteReporter error:%+v\n",err)
+		logs.Error(ctx,"traceInit NewRemoteReporter error:%+v\n",err)
 		return nil,nil
 	}
 	return trace,closer
 }
 
 //将span注入http头部
-func injectSpanToCtx(span opentracing.Span)*http.Request{
+func injectSpanToCtx(ctx context.Context,span opentracing.Span)*http.Request{
 	//将span注册到header中
 	req,err:=http.NewRequest("GET","",nil)
 	if err!=nil {
-		log.Printf("injectSpanToCtx error,err:%+v\n",err)
+		logs.Error(ctx,"injectSpanToCtx error,err:%+v\n",err)
 		return nil
 	}
 	//注入

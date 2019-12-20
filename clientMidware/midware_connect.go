@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
-	"log"
 	"wfuProject/clientUtil"
+	"wfuProject/logs"
 )
 
 func NewClientConnectMidWare(nextFunc ClientMidwareFunc) ClientMidwareFunc {
@@ -17,7 +17,7 @@ func NewClientConnectMidWare(nextFunc ClientMidwareFunc) ClientMidwareFunc {
 			//从connect中获得ip地址
 			clientServerMetaData,err=clientUtil.GetMetaDataFromContext(ctx)
 			if err!=nil {
-				log.Printf("midware_connect GetMetaDataFromContext error,err:%+v\n",err)
+				logs.Error(ctx,"midware_connect GetMetaDataFromContext error,err:%+v\n",err)
 				return
 			}
 			//创建连接
@@ -26,7 +26,7 @@ func NewClientConnectMidWare(nextFunc ClientMidwareFunc) ClientMidwareFunc {
 			fmt.Printf("select ip:%s\n",ipAddr)
 			conn,err=grpc.Dial(ipAddr,grpc.WithInsecure())
 			if err!=nil {
-				log.Printf("midware_connect Dial error,err:%+v\n",err)
+				logs.Error(ctx,"midware_connect Dial error,err:%+v\n",err)
 				return nil,err
 			}
 			defer conn.Close()

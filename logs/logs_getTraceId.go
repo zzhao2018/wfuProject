@@ -16,8 +16,8 @@ func init()  {
 func GetTraceId(ctx context.Context)(string,error){
 	v,ok:=ctx.Value(traceIdKey{}).(string)
 	if ok==false {
-		err:=fmt.Errorf("not found GetTraceId exception")
-		return "",err
+		//err:=fmt.Errorf("not found GetTraceId exception")
+		return "",nil
 	}
 	return v,nil
 }

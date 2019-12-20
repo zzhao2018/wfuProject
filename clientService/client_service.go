@@ -7,6 +7,7 @@ import (
 	"time"
 	"wfuProject/clientMidware"
 	"wfuProject/clientUtil"
+	"wfuProject/logs"
 	"wfuProject/register"
 	_"wfuProject/register/etcdRegister"
 	"wfuProject/requsetBalance"
@@ -18,11 +19,16 @@ type ClientService struct {
 
 type OptionFunc func(c *ClientService)
 
-
+//常亮
+const(
+	logChanSize=100
+	logLevel="DEBUG"
+)
 //设置全局变量
 var(
 	globalServiceRegister register.Register
 	initServiceRegisterController sync.Once
+	initServiceLogController sync.Once
 )
 
 //初始化service
@@ -49,7 +55,27 @@ func NewClientService(serviceName string,optFunc ...OptionFunc)*ClientService{
 			return
 		}
 	})
+	//初始化日志
+	initClientLog(serviceName)
 	return c
+}
+
+//初始化日志
+func initClientLog(serviceName string){
+	//初始化日志
+	logs.InitLog(logChanSize,logs.GetLogLevelFromStr(logLevel),serviceName)
+	//初始化控制台日志输出
+	outputL:=logs.NewLogConsole()
+	logs.LogAddOutPut(outputL)
+	//初始化文本日志输出
+	fileDir:=`C:\Users\35278\Desktop\测试数据\go_log_test`
+	fileName:=`client_test.log`
+	logF,err:=logs.NewLogFile(fileDir,fileName)
+	if err!=nil {
+		log.Printf("initLog NewLogFile error,err:%+v\n",err)
+		return
+	}
+	logs.LogAddOutPut(logF)
 }
 
 //初始化追踪id
@@ -66,7 +92,7 @@ func(c *ClientService)Call(ctx context.Context,handler clientMidware.ClientMidwa
 	outFunc:=c.BuildClientMidWareLink(handler)
 	response,err:=outFunc(ctx,in)
 	if err!=nil {
-		log.Printf("Call getResponse error,err:%+v\n",err)
+		logs.Error(ctx,"Call getResponse error,err:%+v\n",err)
 		return nil,err
 	}
 	return response,nil
@@ -77,6 +103,8 @@ func(c *ClientService)Call(ctx context.Context,handler clientMidware.ClientMidwa
 /***********************管理中间件**************************/
 func(c *ClientService)BuildClientMidWareLink(handler clientMidware.ClientMidwareFunc)clientMidware.ClientMidwareFunc{
 	var midClientMidWareLink=make([]clientMidware.ClientMidware,0)
+	//增加熔断
+	midClientMidWareLink=append(midClientMidWareLink,clientMidware.NewClientFuseMidWare)
 	//增加分布式追踪
 	midClientMidWareLink=append(midClientMidWareLink,clientMidware.NewClientTraceMidware)
 	//增加服务发现
