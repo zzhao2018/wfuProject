@@ -8,11 +8,13 @@ import (
 	"wfuProject/clientService"
 	"wfuProject/codeGenerate/output/generate"
 	"wfuProject/codeGenerate/output/service/client/clientTool"
+	"wfuProject/requsetBalance"
 )
 
 func main() {
-	for  {
-		cd:= clientTool.NewClientDeal("/test/test", clientService.OptClientTraceId("1228334"))
+	for i:=0;i<10;i++ {
+		cd:= clientTool.NewClientDeal("/test/test", clientService.OptClientTraceId("1228334"),
+			clientService.OptClientBalanceType(requsetBalance.B_RandomWeightBalance))
 		ctx:=context.Background()
 		reply,err:=cd.Concat(ctx,&generate.ConcatRequest{
 			Data1:"hello,",
@@ -21,11 +23,11 @@ func main() {
 		if err!=nil {
 			log.Printf("error:%+v\n",err)
 			time.Sleep(time.Millisecond*20)
-			fmt.Printf("==============replySub ERROR================\n")
+			fmt.Printf("==============Concat ERROR================\n")
 		}else{
 			fmt.Printf("data:%+v\n",reply.Result)
 			time.Sleep(time.Millisecond*20)
-			fmt.Printf("---------------replySub SUCCESS---------------\n\n")
+			fmt.Printf("---------------Concat SUCCESS---------------\n\n")
 		}
 		replySum,err:=cd.Sum(ctx,&generate.SumRequest{
 			A:                    1290,
@@ -34,11 +36,11 @@ func main() {
 		if err!=nil {
 			log.Printf("error:%+v\n",err)
 			time.Sleep(time.Millisecond*20)
-			fmt.Printf("==============replySub ERROR================\n")
+			fmt.Printf("==============Sum ERROR================\n")
 		}else{
 			fmt.Printf("data:%+v\n",replySum.V)
 			time.Sleep(time.Millisecond*20)
-			fmt.Printf("---------------replySub SUCCESS---------------\n\n")
+			fmt.Printf("---------------Sum SUCCESS---------------\n\n")
 		}
 		replySub,err:=cd.Sub(ctx,&generate.SumRequest{
 			A:                    10,
@@ -47,11 +49,11 @@ func main() {
 		if err!=nil {
 			log.Printf("error:%+v\n",err)
 			time.Sleep(time.Millisecond*20)
-			fmt.Printf("==============replySub ERROR================\n")
+			fmt.Printf("==============Sub ERROR================\n")
 		}else{
 			fmt.Printf("data:%+v\n",replySub.V)
 			time.Sleep(time.Millisecond*20)
-			fmt.Printf("---------------replySub SUCCESS---------------\n\n")
+			fmt.Printf("---------------Sub SUCCESS---------------\n\n")
 		}
 	}
 }

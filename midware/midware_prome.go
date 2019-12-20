@@ -39,23 +39,23 @@ type ServerScanTool struct {
 	methodTime *prometheus.SummaryVec     //统计访问时间的发布
 }
 
-func NewServerScanTool()*ServerScanTool{
+func NewServerScanTool(counterName string,errName string,timeName string)*ServerScanTool{
 	Tool:=&ServerScanTool{
 		requestNum: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Name:"wfuproject_request_num",
-				Help:"the request time of wfuproject",
+				Name:counterName,
+				Help:"the request time of project",
 			},
 			[]string{"service","method"}),
 		errorNum:   prometheus.NewCounterVec(prometheus.CounterOpts{
-			Name:"wfuproject_error_count",
+			Name:errName,
 			Help:"the num of every error",
 		},
 		[]string{"service","method","error_code"},
 		),
 		methodTime: prometheus.NewSummaryVec(prometheus.SummaryOpts{
-			Name:        "wfuproject_method_usetime",
-			Help:        "the time len of wfuproject method",
+			Name:        timeName,
+			Help:        "the time len of project method",
             Objectives: map[float64]float64{0.5:0.05,0.9:0.01,0.99:0.001},
 		},
 		[]string{"service","method"}),
@@ -97,10 +97,11 @@ func(s *ServerScanTool)CalTimeUse(server string,method string,us int64){
 
 
 //中间件
-var promeScanTool =NewServerScanTool()
+var promeScanTool =NewServerScanTool("wfuproject_request_num","wfuproject_error_count","wfuproject_method_usetime")
 
 func PromeScanMidWare(next MidWareFunc) MidWareFunc {
 	return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
+
 		//统计次数
 		serverMeta:=GetServerScanMeta(ctx)
 		promeScanTool.IncrRequestTime(serverMeta.ServerName,serverMeta.Method)

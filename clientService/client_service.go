@@ -2,19 +2,22 @@ package clientService
 
 import (
 	"context"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 	"wfuProject/clientMidware"
 	"wfuProject/clientUtil"
 	"wfuProject/logs"
 	"wfuProject/register"
-	_"wfuProject/register/etcdRegister"
+	_ "wfuProject/register/etcdRegister"
 	"wfuProject/requsetBalance"
 )
 
 type ClientService struct {
 	metadata *clientUtil.ClientMetaData
+	balance requsetBalance.Balance
 }
 
 type OptionFunc func(c *ClientService)
@@ -29,6 +32,7 @@ var(
 	globalServiceRegister register.Register
 	initServiceRegisterController sync.Once
 	initServiceLogController sync.Once
+	initServicePromeController sync.Once
 )
 
 //初始化service
@@ -56,8 +60,24 @@ func NewClientService(serviceName string,optFunc ...OptionFunc)*ClientService{
 		}
 	})
 	//初始化日志
-	initClientLog(serviceName)
+	initServiceLogController.Do(func() {
+		initClientLog(serviceName)
+	})
+	//初始化监控
+	initServicePromeController.Do(func() {
+		go initProme()
+	})
 	return c
+}
+
+//初始化监控
+func initProme(){
+	var prome_port=":8099"
+	http.Handle("/metrics",promhttp.Handler())
+	err:=http.ListenAndServe(prome_port,nil)
+	if err!=nil {
+		panic(err)
+	}
 }
 
 //初始化日志
@@ -85,9 +105,26 @@ func OptClientTraceId(traceids string)OptionFunc{
 	}
 }
 
+//初始化负载均衡类型
+func OptClientBalanceType(balanceType int)OptionFunc{
+	return func(c *ClientService) {
+		if balanceType<0 {
+			balanceType=requsetBalance.B_RandomWeightBalance
+		}
+		balance,err:=requsetBalance.GetBalance(balanceType)
+		if err!=nil {
+			log.Printf("client_service BuildClientMidWareLink GetBalance error,err:%+v\n",err)
+			c.balance,_=requsetBalance.GetBalance(requsetBalance.B_PollingWeightBalance)
+			return
+		}
+		c.balance=balance
+	}
+}
 
 func(c *ClientService)Call(ctx context.Context,handler clientMidware.ClientMidwareFunc,in interface{},funcName string)(interface{},error){
+	c.metadata.MethodName=funcName
 	ctx= clientUtil.ContextWithMetaData(ctx,c.metadata)
+	ctx=logs.SetTraceIdFromData(ctx,c.metadata.Traceid)
 	//启动中间件
 	outFunc:=c.BuildClientMidWareLink(handler)
 	response,err:=outFunc(ctx,in)
@@ -103,6 +140,8 @@ func(c *ClientService)Call(ctx context.Context,handler clientMidware.ClientMidwa
 /***********************管理中间件**************************/
 func(c *ClientService)BuildClientMidWareLink(handler clientMidware.ClientMidwareFunc)clientMidware.ClientMidwareFunc{
 	var midClientMidWareLink=make([]clientMidware.ClientMidware,0)
+	//增加监控
+	midClientMidWareLink=append(midClientMidWareLink,clientMidware.NewClientPromeMidWare)
 	//增加熔断
 	midClientMidWareLink=append(midClientMidWareLink,clientMidware.NewClientFuseMidWare)
 	//增加分布式追踪
@@ -110,12 +149,7 @@ func(c *ClientService)BuildClientMidWareLink(handler clientMidware.ClientMidware
 	//增加服务发现
 	midClientMidWareLink=append(midClientMidWareLink,clientMidware.NewClientRegisterMidware(globalServiceRegister))
 	//增加负载均衡
-	balance,err:=requsetBalance.GetBalance(requsetBalance.B_RandomWeightBalance)
-	if err!=nil {
-		log.Printf("client_service BuildClientMidWareLink GetBalance error,err:%+v\n",err)
-		return nil
-	}
-	midClientMidWareLink=append(midClientMidWareLink,clientMidware.NewClientBalanceMidWare(balance))
+	midClientMidWareLink=append(midClientMidWareLink,clientMidware.NewClientBalanceMidWare(c.balance))
 	//添加短连接
 	midClientMidWareLink=append(midClientMidWareLink,clientMidware.NewClientConnectMidWare)
 	//建立连接

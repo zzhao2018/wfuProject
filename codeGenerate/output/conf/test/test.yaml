@@ -1,8 +1,8 @@
-port: 12306
+port: 12308
 servername: "test"
 prometheus:
   switch_on: true
-  port: 8080
+  port: 8095
 limit:
   switch_on: true
   qps: 10

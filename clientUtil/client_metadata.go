@@ -10,6 +10,7 @@ import (
 
 type ClientMetaData struct {
 	ServerName string   //服务名称
+	MethodName string //方法名称
 	NodeList []*register.ServerNode //服务器结点信息
 	Traceid string           //分布式追踪id
 	SelectNode *register.ServerNode
