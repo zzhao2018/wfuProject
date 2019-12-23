@@ -33,6 +33,11 @@ func NewTraceMidWare(next MidWareFunc)MidWareFunc{
 			trace_id=""
 		}
 		span.SetTag("trace_id",trace_id)
+		span.LogFields(
+			log.String("event","server_trace"),
+			log.String("value",trace_id),
+			log.String("method",serverMetaData.Method),
+			)
 		resp,err=next(ctx,req)
 		if err!=nil {
 			logs.Error(ctx,"NewMidwareTrace SetTag error,err:%+v\n",err)
